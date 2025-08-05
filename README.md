@@ -57,7 +57,7 @@ assets/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/flutter-project-structure-generator.git
+   git clone https://github.com/nncc0/flutter-project-structure-generator.git
    cd flutter-project-structure-generator
    ```
 
@@ -238,4 +238,4 @@ If you have any questions or need help, please open an issue on GitHub or contac
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/your-username)
+Made with ❤️ by [Aboud](https://github.com/nncc0)
