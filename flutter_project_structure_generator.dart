@@ -2,10 +2,9 @@
 import 'dart:io';
 import 'package:yaml/yaml.dart' as yaml;
 import 'package:path/path.dart' as path;
-  import 'package:yaml_writer/yaml_writer.dart';
 
 void main() {
-  print('🚀 Advanced Flutter Project Structure Generator v2.0');
+  print('🚀 Advanced Flutter Project Structure Generator v3.0');
   print('===============================================');
   
   // Check if we're in a Flutter project
@@ -19,11 +18,9 @@ void main() {
     print('1. Create complete project structure');
     print('2. Add a new feature');
     print('3. Add a new service');
-    print('4. Generate boilerplate code');
-    print('5. Configure dependencies');
-    print('6. Exit');
+    print('4. Exit');
     
-    stdout.write('\nEnter your choice (1-6): ');
+    stdout.write('\nEnter your choice (1-4): ');
     final choice = stdin.readLineSync();
     
     switch (choice) {
@@ -37,12 +34,6 @@ void main() {
         _addNewService();
         break;
       case '4':
-        _generateBoilerplate();
-        break;
-      case '5':
-        _configureDependencies();
-        break;
-      case '6':
         print('\n👋 Goodbye!');
         exit(0);
       default:
@@ -93,7 +84,7 @@ void _createCompleteStructure() {
   
   // Create main.dart
   _createMainFile(projectName, enableLocalization, enableTheming, enableAnalytics);
-
+  
   // Create app_router.dart
   _createAppRouter();
   
@@ -722,7 +713,7 @@ class CustomButton extends StatelessWidget {
           strokeWidth: 2,
           valueColor: AlwaysStoppedAnimation<Color>(
             buttonType == ButtonType.outline || buttonType == ButtonType.text
-                ? Theme.of(Get.context!).colorScheme.primary
+                ? Theme.of(context).colorScheme.primary
                 : Colors.white,
           ),
         ),
@@ -951,12 +942,12 @@ class LoadingWidget extends StatelessWidget {
 // ❌ Error Widget
 import 'package:flutter/material.dart';
 
-class ErrorWidget extends StatelessWidget {
+class ErrorWidgetApp extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
   final String? retryText;
   
-  const ErrorWidget({
+  const ErrorWidgetApp({
     required this.message,
     this.onRetry,
     this.retryText,
@@ -1760,6 +1751,7 @@ void _createAuthFeature() {
     'lib/features/auth/domain/entities',
     'lib/features/auth/domain/repositories',
     'lib/features/auth/domain/usecases',
+    'lib/features/auth/domain/usecases/params',
     'lib/features/auth/presentation/cubit',
     'lib/features/auth/presentation/pages',
     'lib/features/auth/presentation/widgets',
@@ -2859,7 +2851,7 @@ class _RegisterPageState extends State<RegisterPage> {
         listener: (context, state) {
           if (state is Authenticated) {
             context.go('/');
-          } else if (state is AuthError) {
+          } else if ( state is AuthError) {
             context.showSnackBar(state.message, backgroundColor: Colors.red);
           }
         },
@@ -3988,6 +3980,8 @@ abstract class ${pascalCase}Repository {
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/${snakeCase}_entity.dart';
+import '../models/${snakeCase}_model.dart';
+
 import '../../domain/repositories/${snakeCase}_repository.dart';
 ${includeApi ? "import '../datasources/${snakeCase}_remote_datasource.dart';" : ""}
 ${includeStorage ? "import '../datasources/${snakeCase}_local_datasource.dart';" : ""}
@@ -4195,7 +4189,7 @@ class ${pascalCase}LocalDataSourceImpl implements ${pascalCase}LocalDataSource {
       return ${snakeCase}sJson
           .map((json) => ${pascalCase}Model.fromJson(
                 Map<String, dynamic>.from(
-                  Map<String, dynamic>.from(json),
+                  Map<String, dynamic>.from(json as Map),
                 ),
               ))
           .toList();
@@ -4223,7 +4217,7 @@ class ${pascalCase}LocalDataSourceImpl implements ${pascalCase}LocalDataSource {
     
     try {
       final ${snakeCase}Map = Map<String, dynamic>.from(
-        Map<String, dynamic>.from(${snakeCase}Json),
+        Map<String, dynamic>.from(${snakeCase}Json as Map),
       );
       return ${pascalCase}Model.fromJson(${snakeCase}Map);
     } catch (e) {
@@ -4258,8 +4252,8 @@ class ${pascalCase}LocalDataSourceImpl implements ${pascalCase}LocalDataSource {
   }
   
   // Use Cases
-  final getpascalCasesUseCaseFile = File('lib/features/$snakeCase/domain/usecases/get_${snakeCase}s_usecase.dart');
-  getpascalCasesUseCaseFile.writeAsStringSync('''
+  final pascalCasesUseCaseFile = File('lib/features/$snakeCase/domain/usecases/get_${snakeCase}s_usecase.dart');
+  pascalCasesUseCaseFile.writeAsStringSync('''
 // 🎯 Get ${pascalCase}s Use Case
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
@@ -4279,9 +4273,9 @@ class Get${pascalCase}sUseCase implements UseCase<List<${pascalCase}Entity>, NoP
 }
 ''');
   print('📄 Created: lib/features/$snakeCase/domain/usecases/get_${snakeCase}s_usecase.dart');
-
-  final getpascalCaseUseCaseFile = File('lib/features/$snakeCase/domain/usecases/get_${snakeCase}_usecase.dart');
-  getpascalCaseUseCaseFile.writeAsStringSync('''
+  
+  final pascalCaseUseCaseFile = File('lib/features/$snakeCase/domain/usecases/get_${snakeCase}_usecase.dart');
+  pascalCaseUseCaseFile.writeAsStringSync('''
 // 🎯 Get ${pascalCase} Use Case
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
@@ -4414,6 +4408,8 @@ import '../../../../core/widgets/error_widget.dart';
 import '../../domain/usecases/get_${snakeCase}_usecase.dart';
 import '../../domain/usecases/get_${snakeCase}s_usecase.dart';
 
+import '../../domain/entities/${snakeCase}_entity.dart';
+
 class ${pascalCase}Page extends StatelessWidget {
   const ${pascalCase}Page({Key? key}) : super(key: key);
   
@@ -4447,7 +4443,7 @@ class ${pascalCase}Page extends StatelessWidget {
             } else if (state is ${pascalCase}Loaded) {
               return _build${pascalCase}Detail(context, state.${pascalCase.toLowerCase()});
             } else if (state is ${pascalCase}Error) {
-              return ErrorWidget(
+              return ErrorWidgetApp(
                 message: state.message,
                 onRetry: () {
                   context.read<${pascalCase}Cubit>().refresh${pascalCase}s();
@@ -4519,7 +4515,7 @@ class ${pascalCase}Page extends StatelessWidget {
           ],
           SizedBox(height: 24.h),
           Text(
-            'Created: ${snakeCase}',
+            'Created: ${snakeCase}.createdAt.format()',
             style: TextStyle(
               fontSize: 14.sp,
               color: Colors.grey,
@@ -4527,7 +4523,7 @@ class ${pascalCase}Page extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Updated: ${snakeCase}',
+            'Updated: ${snakeCase}.updatedAt.format()',
             style: TextStyle(
               fontSize: 14.sp,
               color: Colors.grey,
@@ -4609,13 +4605,15 @@ class ${pascalCase}Widget extends StatelessWidget {
 import 'package:get_it/get_it.dart';
 ${includeApi ? "import '../../core/network/api_client.dart';" : ""}
 ${includeStorage ? "import '../../core/services/storage_service.dart';" : ""}
-${includeApi ? "import '../data/datasources/${snakeCase}_remote_datasource.dart';" : ""}
-${includeStorage ? "import '../data/datasources/${snakeCase}_local_datasource.dart';" : ""}
-import '../data/repositories/${snakeCase}_repository_impl.dart';
-import '../domain/repositories/${snakeCase}_repository.dart';
-import '../domain/usecases/get_${snakeCase}_usecase.dart';
-import '../domain/usecases/get_${snakeCase}s_usecase.dart';
-import '../presentation/cubit/${snakeCase}_cubit.dart';
+${includeApi ? "import 'data/datasources/${snakeCase}_remote_datasource.dart';" : ""}
+${includeStorage ? "import 'data/datasources/${snakeCase}_local_datasource.dart';" : ""}
+
+import '../../core/services/locator_service.dart';
+import 'data/repositories/${snakeCase}_repository_impl.dart';
+import 'domain/repositories/${snakeCase}_repository.dart';
+import 'domain/usecases/get_${snakeCase}_usecase.dart';
+import 'domain/usecases/get_${snakeCase}s_usecase.dart';
+import 'presentation/cubit/${snakeCase}_cubit.dart';
 
 Future<void> init${pascalCase}Feature() async {
   ${includeApi ? """
@@ -4685,7 +4683,7 @@ void _updateAppRouter(String snakeCase, String pascalCase) {
   // Add import
   final updatedContent = content.replaceFirst(
     'import \'package:go_router/go_router.dart\';',
-    'import \'package:go_router/go_router.dart\';\nimport \'package:your_app/features/$snakeCase/presentation/pages/${snakeCase}_page.dart\';',
+    'import \'package:go_router/go_router.dart\';\nimport \'features/$snakeCase/presentation/pages/${snakeCase}_page.dart\';',
   );
   
   // Insert new route before closing bracket
@@ -5406,1088 +5404,6 @@ void _updateLocatorForCustomService(String snakeCase, String pascalCase) {
     locatorFile.writeAsStringSync(finalContent);
     print('📄 Updated: lib/core/services/locator_service.dart');
   }
-}
-
-void _generateBoilerplate() {
-  print('\n📝 Available boilerplate code:');
-  print('1. BLoC Pattern');
-  print('2. Repository Pattern');
-  print('3. API Integration');
-  print('4. Form Validation');
-  print('5. Custom Widget');
-  
-  stdout.write('\nEnter your choice (1-5): ');
-  final choice = stdin.readLineSync();
-  
-  switch (choice) {
-    case '1':
-      _generateBlocBoilerplate();
-      break;
-    case '2':
-      _generateRepositoryBoilerplate();
-      break;
-    case '3':
-      _generateApiBoilerplate();
-      break;
-    case '4':
-      _generateFormValidationBoilerplate();
-      break;
-    case '5':
-      _generateCustomWidgetBoilerplate();
-      break;
-    default:
-      print('❌ Invalid choice. Please try again.');
-  }
-}
-
-void _generateBlocBoilerplate() {
-  stdout.write('\n📝 Enter BLoC name (e.g., user_profile): ');
-  final blocName = stdin.readLineSync()?.trim() ?? '';
-  
-  if (blocName.isEmpty) {
-    print('❌ BLoC name cannot be empty!');
-    return;
-  }
-  
-  stdout.write('🔤 Enter BLoC display name (e.g., User Profile): ');
-  final blocDisplayName = stdin.readLineSync()?.trim() ?? _toPascalCase(blocName);
-  
-  final snakeCase = _toSnakeCase(blocName);
-  final pascalCase = _toPascalCase(blocName);
-  
-  print('\n🔨 Creating BLoC: $blocName');
-  
-  // Create BLoC directory
-  final blocDir = Directory('lib/core/bloc/$snakeCase');
-  if (!blocDir.existsSync()) {
-    blocDir.createSync(recursive: true);
-    print('📁 Created: lib/core/bloc/$snakeCase/');
-  }
-  
-  // Create BLoC files
-  _createBlocFiles(snakeCase, pascalCase, blocDisplayName);
-  
-  print('\n✅ BLoC "$blocName" created successfully!');
-}
-
-void _createBlocFiles(String snakeCase, String pascalCase, String blocDisplayName) {
-  // BLoC file
-  final blocFile = File('lib/core/bloc/$snakeCase/${snakeCase}_bloc.dart');
-  blocFile.writeAsStringSync('''
-// 🎯 $pascalCase BLoC
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-
-part '${snakeCase}_event.dart';
-part '${snakeCase}_state.dart';
-
-class ${pascalCase}Bloc extends Bloc<${pascalCase}Event, ${pascalCase}State> {
-  ${pascalCase}Bloc() : super(const ${pascalCase}Initial()) {
-    on<Load${pascalCase}>(_onLoad${pascalCase});
-    on<Refresh${pascalCase}>(_onRefresh${pascalCase});
-  }
-  
-  Future<void> _onLoad${pascalCase}(
-    Load${pascalCase} event,
-    Emitter<${pascalCase}State> emit,
-  ) async {
-    emit(const ${pascalCase}Loading());
-    
-    try {
-      // TODO: Implement loading logic
-      
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      emit(const ${pascalCase}Loaded());
-    } catch (e) {
-      emit(${pascalCase}Error(e.toString()));
-    }
-  }
-  
-  Future<void> _onRefresh${pascalCase}(
-    Refresh${pascalCase} event,
-    Emitter<${pascalCase}State> emit,
-  ) async {
-    // TODO: Implement refresh logic
-    add(Load${pascalCase}());
-  }
-}
-''');
-  print('📄 Created: lib/core/bloc/$snakeCase/${snakeCase}_bloc.dart');
-  
-  // Event file
-  final eventFile = File('lib/core/bloc/$snakeCase/${snakeCase}_event.dart');
-  eventFile.writeAsStringSync('''
-// 🎯 $pascalCase Event
-part of '${snakeCase}_bloc.dart';
-
-abstract class ${pascalCase}Event extends Equatable {
-  const ${pascalCase}Event();
-  
-  @override
-  List<Object> get props => [];
-}
-
-class Load${pascalCase} extends ${pascalCase}Event {}
-
-class Refresh${pascalCase} extends ${pascalCase}Event {}
-''');
-  print('📄 Created: lib/core/bloc/$snakeCase/${snakeCase}_event.dart');
-  
-  // State file
-  final stateFile = File('lib/core/bloc/$snakeCase/${snakeCase}_state.dart');
-  stateFile.writeAsStringSync('''
-// 🎯 $pascalCase State
-part of '${snakeCase}_bloc.dart';
-
-abstract class ${pascalCase}State extends Equatable {
-  const ${pascalCase}State();
-  
-  @override
-  List<Object> get props => [];
-}
-
-class ${pascalCase}Initial extends ${pascalCase}State {}
-
-class ${pascalCase}Loading extends ${pascalCase}State {}
-
-class ${pascalCase}Loaded extends ${pascalCase}State {}
-
-class ${pascalCase}Error extends ${pascalCase}State {
-  final String message;
-  
-  const ${pascalCase}Error(this.message);
-  
-  @override
-  List<Object> get props => [message];
-}
-''');
-  print('📄 Created: lib/core/bloc/$snakeCase/${snakeCase}_state.dart');
-}
-
-void _generateRepositoryBoilerplate() {
-  stdout.write('\n📝 Enter repository name (e.g., user_profile): ');
-  final repoName = stdin.readLineSync()?.trim() ?? '';
-  
-  if (repoName.isEmpty) {
-    print('❌ Repository name cannot be empty!');
-    return;
-  }
-  
-  stdout.write('🔤 Enter repository display name (e.g., User Profile): ');
-  final repoDisplayName = stdin.readLineSync()?.trim() ?? _toPascalCase(repoName);
-  
-  final snakeCase = _toSnakeCase(repoName);
-  final pascalCase = _toPascalCase(repoName);
-  
-  print('\n🔨 Creating Repository: $repoName');
-  
-  // Create repository directory
-  final repoDir = Directory('lib/core/repositories/$snakeCase');
-  if (!repoDir.existsSync()) {
-    repoDir.createSync(recursive: true);
-    print('📁 Created: lib/core/repositories/$snakeCase/');
-  }
-  
-  // Create repository files
-  _createRepositoryFiles(snakeCase, pascalCase, repoDisplayName);
-  
-  print('\n✅ Repository "$repoName" created successfully!');
-}
-
-void _createRepositoryFiles(String snakeCase, String pascalCase, String repoDisplayName) {
-  // Repository interface
-  final repoInterfaceFile = File('lib/core/repositories/$snakeCase/${snakeCase}_repository.dart');
-  repoInterfaceFile.writeAsStringSync('''
-// 📚 $pascalCase Repository
-import 'package:dartz/dartz.dart';
-import '../../../core/errors/failures.dart';
-
-abstract class ${pascalCase}Repository {
-  // TODO: Add your repository methods here
-  Future<Either<Failure, bool>> performAction();
-}
-''');
-  print('📄 Created: lib/core/repositories/$snakeCase/${snakeCase}_repository.dart');
-  
-  // Repository implementation
-  final repoImplFile = File('lib/core/repositories/$snakeCase/${snakeCase}_repository_impl.dart');
-  repoImplFile.writeAsStringSync('''
-// 🔧 $pascalCase Repository Implementation
-import 'package:dartz/dartz.dart';
-import '../../../core/errors/failures.dart';
-import '${snakeCase}_repository.dart';
-
-class ${pascalCase}RepositoryImpl implements ${pascalCase}Repository {
-  // TODO: Add your dependencies here
-  
-  ${pascalCase}RepositoryImpl();
-  
-  @override
-  Future<Either<Failure, bool>> performAction() async {
-    try {
-      // TODO: Implement repository logic
-      
-      // Simulate operation
-      await Future.delayed(const Duration(seconds: 1));
-      
-      return const Right(true);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-}
-''');
-  print('📄 Created: lib/core/repositories/$snakeCase/${snakeCase}_repository_impl.dart');
-}
-
-void _generateApiBoilerplate() {
-  stdout.write('\n📝 Enter API name (e.g., user_profile): ');
-  final apiName = stdin.readLineSync()?.trim() ?? '';
-  
-  if (apiName.isEmpty) {
-    print('❌ API name cannot be empty!');
-    return;
-  }
-  
-  stdout.write('🔤 Enter API display name (e.g., User Profile): ');
-  final apiDisplayName = stdin.readLineSync()?.trim() ?? _toPascalCase(apiName);
-  
-  stdout.write('🌐 Enter API endpoint (e.g., /user-profile): ');
-  final apiEndpoint = stdin.readLineSync()?.trim() ?? '/$apiName';
-  
-  final snakeCase = _toSnakeCase(apiName);
-  final pascalCase = _toPascalCase(apiName);
-  
-  print('\n🔨 Creating API: $apiName');
-  
-  // Create API directory
-  final apiDir = Directory('lib/core/api/$snakeCase');
-  if (!apiDir.existsSync()) {
-    apiDir.createSync(recursive: true);
-    print('📁 Created: lib/core/api/$snakeCase/');
-  }
-  
-  // Create API files
-  _createApiFiles(snakeCase, pascalCase, apiDisplayName, apiEndpoint);
-  
-  print('\n✅ API "$apiName" created successfully!');
-}
-
-void _createApiFiles(String snakeCase, String pascalCase, String apiDisplayName, String apiEndpoint) {
-  // API service
-  final apiServiceFile = File('lib/core/api/$snakeCase/${snakeCase}_api_service.dart');
-  apiServiceFile.writeAsStringSync('''
-// 🌐 $pascalCase API Service
-import '../../../core/network/api_client.dart';
-import '../../../core/errors/exceptions.dart';
-
-class ${pascalCase}ApiService {
-  final ApiClient apiClient;
-  
-  ${pascalCase}ApiService({required this.apiClient});
-  
-  // TODO: Add your API methods here
-  Future<Map<String, dynamic>> fetchData() async {
-    try {
-      final response = await apiClient.get('$apiEndpoint');
-      return response.data;
-    } on ServerException catch (e) {
-      throw ServerException(
-        'Failed to fetch $apiDisplayName data',
-        statusCode: e.statusCode,
-        data: e.data,
-      );
-    } on NetworkException catch (e) {
-      throw NetworkException('Network error while fetching $apiDisplayName data');
-    } catch (e) {
-      throw ServerException('Unexpected error while fetching $apiDisplayName data');
-    }
-  }
-  
-  Future<Map<String, dynamic>> createData(Map<String, dynamic> data) async {
-    try {
-      final response = await apiClient.post(
-        '$apiEndpoint',
-        data: data,
-      );
-      return response.data;
-    } on ServerException catch (e) {
-      throw ServerException(
-        'Failed to create $apiDisplayName data',
-        statusCode: e.statusCode,
-        data: e.data,
-      );
-    } on NetworkException catch (e) {
-      throw NetworkException('Network error while creating $apiDisplayName data');
-    } catch (e) {
-      throw ServerException('Unexpected error while creating $apiDisplayName data');
-    }
-  }
-  
-  Future<Map<String, dynamic>> updateData(String id, Map<String, dynamic> data) async {
-    try {
-      final response = await apiClient.put(
-        '$apiEndpoint/\$id',
-        data: data,
-      );
-      return response.data;
-    } on ServerException catch (e) {
-      throw ServerException(
-        'Failed to update $apiDisplayName data',
-        statusCode: e.statusCode,
-        data: e.data,
-      );
-    } on NetworkException catch (e) {
-      throw NetworkException('Network error while updating $apiDisplayName data');
-    } catch (e) {
-      throw ServerException('Unexpected error while updating $apiDisplayName data');
-    }
-  }
-  
-  Future<void> deleteData(String id) async {
-    try {
-      await apiClient.delete('$apiEndpoint/\$id');
-    } on ServerException catch (e) {
-      throw ServerException(
-        'Failed to delete $apiDisplayName data',
-        statusCode: e.statusCode,
-        data: e.data,
-      );
-    } on NetworkException catch (e) {
-      throw NetworkException('Network error while deleting $apiDisplayName data');
-    } catch (e) {
-      throw ServerException('Unexpected error while deleting $apiDisplayName data');
-    }
-  }
-}
-''');
-  print('📄 Created: lib/core/api/$snakeCase/${snakeCase}_api_service.dart');
-  
-  // API model
-  final apiModelFile = File('lib/core/api/$snakeCase/${snakeCase}_model.dart');
-  apiModelFile.writeAsStringSync('''
-// 📊 $pascalCase Model
-import 'package:equatable/equatable.dart';
-
-class ${pascalCase}Model extends Equatable {
-  final String id;
-  final String name;
-  final String? description;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  
-  const ${pascalCase}Model({
-    required this.id,
-    required this.name,
-    this.description,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-  
-  factory ${pascalCase}Model.fromJson(Map<String, dynamic> json) {
-    return ${pascalCase}Model(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
-    );
-  }
-  
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-    };
-  }
-  
-  @override
-  List<Object> get props => [id, name, createdAt, updatedAt];
-}
-''');
-  print('📄 Created: lib/core/api/$snakeCase/${snakeCase}_model.dart');
-}
-
-void _generateFormValidationBoilerplate() {
-  stdout.write('\n📝 Enter form name (e.g., login_form): ');
-  final formName = stdin.readLineSync()?.trim() ?? '';
-  
-  if (formName.isEmpty) {
-    print('❌ Form name cannot be empty!');
-    return;
-  }
-  
-  stdout.write('🔤 Enter form display name (e.g., Login Form): ');
-  final formDisplayName = stdin.readLineSync()?.trim() ?? _toPascalCase(formName);
-  
-  final snakeCase = _toSnakeCase(formName);
-  final pascalCase = _toPascalCase(formName);
-  
-  print('\n🔨 Creating Form Validation: $formName');
-  
-  // Create form directory
-  final formDir = Directory('lib/core/forms/$snakeCase');
-  if (!formDir.existsSync()) {
-    formDir.createSync(recursive: true);
-    print('📁 Created: lib/core/forms/$snakeCase/');
-  }
-  
-  // Create form files
-  _createFormValidationFiles(snakeCase, pascalCase, formDisplayName);
-  
-  print('\n✅ Form Validation "$formName" created successfully!');
-}
-
-void _createFormValidationFiles(String snakeCase, String pascalCase, String formDisplayName) {
-  // Form model
-  final formModelFile = File('lib/core/forms/$snakeCase/${snakeCase}_form_model.dart');
-  formModelFile.writeAsStringSync('''
-// 📝 $pascalCase Form Model
-import 'package:equatable/equatable.dart';
-import 'package:formz/formz.dart';
-
-// TODO: Define your form inputs here
-class Email extends FormzInput<String, EmailValidationError> {
-  const Email.pure([String value = '']) : super.pure(value);
-  const Email.dirty([String value = '']) : super.dirty(value);
-  
-  static final _emailRegex = RegExp(
-    r'^[a-zA-Z0-9.!#\$%&\'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\$',
-  );
-  
-  @override
-  EmailValidationError? validator(String value) {
-    return _emailRegex.hasMatch(value) ? null : EmailValidationError.invalid;
-  }
-}
-
-enum EmailValidationError { invalid }
-
-class Password extends FormzInput<String, PasswordValidationError> {
-  const Password.pure([String value = '']) : super.pure(value);
-  const Password.dirty([String value = '']) : super.dirty(value);
-  
-  @override
-  PasswordValidationError? validator(String value) {
-    return value.length >= 6 ? null : PasswordValidationError.invalid;
-  }
-}
-
-enum PasswordValidationError { invalid }
-
-class ${pascalCase}FormModel extends Equatable {
-  const ${pascalCase}FormModel({
-    this.email = const Email.pure(),
-    this.password = const Password.pure(),
-    this.status = FormzSubmissionStatus.initial,
-  });
-  
-  final Email email;
-  final Password password;
-  final FormzSubmissionStatus status;
-  
-  ${pascalCase}FormModel copyWith({
-    Email? email,
-    Password? password,
-    FormzSubmissionStatus? status,
-  }) {
-    return ${pascalCase}FormModel(
-      email: email ?? this.email,
-      password: password ?? this.password,
-      status: status ?? this.status,
-    );
-  }
-  
-  @override
-  List<Object> get props => [email, password, status];
-}
-''');
-  print('📄 Created: lib/core/forms/$snakeCase/${snakeCase}_form_model.dart');
-  
-  // Form submission
-  final formSubmissionFile = File('lib/core/forms/$snakeCase/${snakeCase}_form_submission.dart');
-  formSubmissionFile.writeAsStringSync('''
-// 📝 $pascalCase Form Submission
-import 'package:dartz/dartz.dart';
-import '../../../core/errors/failures.dart';
-
-abstract class ${pascalCase}FormSubmission {
-  Future<Either<Failure, bool>> submit({
-    required String email,
-    required String password,
-  });
-}
-
-class Mock${pascalCase}FormSubmission implements ${pascalCase}FormSubmission {
-  @override
-  Future<Either<Failure, bool>> submit({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      // TODO: Implement actual form submission logic
-      
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // For demo purposes, randomly succeed or fail
-      final isSuccess = DateTime.now().millisecond % 2 == 0;
-      
-      if (isSuccess) {
-        return const Right(true);
-      } else {
-        return Left(ServerFailure('Submission failed. Please try again.'));
-      }
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-}
-''');
-  print('📄 Created: lib/core/forms/$snakeCase/${snakeCase}_form_submission.dart');
-  
-  // Form cubit
-  final formCubitFile = File('lib/core/forms/$snakeCase/${snakeCase}_form_cubit.dart');
-  formCubitFile.writeAsStringSync('''
-// 📝 $pascalCase Form Cubit
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '${snakeCase}_form_model.dart';
-import '${snakeCase}_form_submission.dart';
-
-class ${pascalCase}FormCubit extends Cubit<${pascalCase}FormModel> {
-  ${pascalCase}FormCubit() : super(const ${pascalCase}FormModel());
-  
-  void emailChanged(String value) {
-    final email = Email.dirty(value);
-    emit(state.copyWith(
-      email: email,
-      status: FormzSubmissionStatus.initial,
-    ));
-  }
-  
-  void passwordChanged(String value) {
-    final password = Password.dirty(value);
-    emit(state.copyWith(
-      password: password,
-      status: FormzSubmissionStatus.initial,
-    ));
-  }
-  
-  Future<void> formSubmitted(${pascalCase}FormSubmission submission) async {
-    if (!state.isValid) return;
-    
-    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
-    
-    try {
-      await submission.submit(
-        email: state.email.value,
-        password: state.password.value,
-      );
-      
-      emit(state.copyWith(status: FormzSubmissionStatus.success));
-    } catch (e) {
-      emit(state.copyWith(status: FormzSubmissionStatus.failure));
-    }
-  }
-}
-''');
-  print('📄 Created: lib/core/forms/$snakeCase/${snakeCase}_form_cubit.dart');
-}
-
-void _generateCustomWidgetBoilerplate() {
-  stdout.write('\n📝 Enter widget name (e.g., custom_button): ');
-  final widgetName = stdin.readLineSync()?.trim() ?? '';
-  
-  if (widgetName.isEmpty) {
-    print('❌ Widget name cannot be empty!');
-    return;
-  }
-  
-  stdout.write('🔤 Enter widget display name (e.g., Custom Button): ');
-  final widgetDisplayName = stdin.readLineSync()?.trim() ?? _toPascalCase(widgetName);
-  
-  stdout.write('🎨 Is widget stateless? (y/n): ');
-  final isStateless = stdin.readLineSync()?.trim().toLowerCase() == 'y';
-  
-  final snakeCase = _toSnakeCase(widgetName);
-  final pascalCase = _toPascalCase(widgetName);
-  
-  print('\n🔨 Creating Widget: $widgetName');
-  
-  // Create widget directory
-  final widgetDir = Directory('lib/core/widgets/$snakeCase');
-  if (!widgetDir.existsSync()) {
-    widgetDir.createSync(recursive: true);
-    print('📁 Created: lib/core/widgets/$snakeCase/');
-  }
-  
-  // Create widget file
-  _createCustomWidgetFile(snakeCase, pascalCase, widgetDisplayName, isStateless);
-  
-  print('\n✅ Widget "$widgetName" created successfully!');
-}
-
-void _createCustomWidgetFile(String snakeCase, String pascalCase, String widgetDisplayName, bool isStateless) {
-  final widgetFile = File('lib/core/widgets/$snakeCase/${snakeCase}_widget.dart');
-  
-  if (isStateless) {
-    widgetFile.writeAsStringSync('''
-// 🎨 $widgetDisplayName
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-class $pascalCase extends StatelessWidget {
-  final String? text;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-  final Widget? icon;
-  final double? width;
-  final double? height;
-  final Color? backgroundColor;
-  final Color? foregroundColor;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
-  final BorderRadius? borderRadius;
-  final BoxBorder? border;
-  
-  const $pascalCase({
-    this.text,
-    this.onPressed,
-    this.isLoading = false,
-    this.icon,
-    this.width,
-    this.height,
-    this.backgroundColor,
-    this.foregroundColor,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.border,
-    Key? key,
-  }) : super(key: key);
-  
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      margin: margin,
-      decoration: BoxDecoration(
-        color: backgroundColor ?? Theme.of(context).primaryColor,
-        borderRadius: borderRadius ?? BorderRadius.circular(8.r),
-        border: border,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isLoading ? null : onPressed,
-          borderRadius: borderRadius ?? BorderRadius.circular(8.r),
-          child: Padding(
-            padding: padding ?? EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            child: Center(
-              child: _buildContent(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildContent() {
-    if (isLoading) {
-      return SizedBox(
-        width: 20.w,
-        height: 20.h,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(
-            foregroundColor ?? Colors.white,
-          ),
-        ),
-      );
-    }
-    
-    if (icon != null && text != null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconTheme(
-            data: IconThemeData(
-              color: foregroundColor ?? Colors.white,
-              size: 20.sp,
-            ),
-            child: icon!,
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            text!,
-            style: TextStyle(
-              color: foregroundColor ?? Colors.white,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      );
-    } else if (icon != null) {
-      return IconTheme(
-        data: IconThemeData(
-          color: foregroundColor ?? Colors.white,
-          size: 20.sp,
-        ),
-        child: icon!,
-      );
-    } else if (text != null) {
-      return Text(
-        text!,
-        style: TextStyle(
-          color: foregroundColor ?? Colors.white,
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w600,
-        ),
-      );
-    }
-    
-    return const SizedBox.shrink();
-  }
-}
-''');
-  } else {
-    widgetFile.writeAsStringSync('''
-// 🎨 $widgetDisplayName
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-class $pascalCase extends StatefulWidget {
-  final String? text;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-  final Widget? icon;
-  final double? width;
-  final double? height;
-  final Color? backgroundColor;
-  final Color? foregroundColor;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
-  final BorderRadius? borderRadius;
-  final BoxBorder? border;
-  
-  const $pascalCase({
-    this.text,
-    this.onPressed,
-    this.isLoading = false,
-    this.icon,
-    this.width,
-    this.height,
-    this.backgroundColor,
-    this.foregroundColor,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.border,
-    Key? key,
-  }) : super(key: key);
-  
-  @override
-  State<$pascalCase> createState() => _${pascalCase}State();
-}
-
-class _${pascalCase}State extends State<$pascalCase> {
-  bool _isPressed = false;
-  
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        if (widget.onPressed != null && !widget.isLoading) {
-          setState(() {
-            _isPressed = true;
-          });
-        }
-      },
-      onTapUp: (_) {
-        setState(() {
-          _isPressed = false;
-        });
-      },
-      onTapCancel: () {
-        setState(() {
-          _isPressed = false;
-        });
-      },
-      onTap: widget.isLoading ? null : widget.onPressed,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        width: widget.width,
-        height: widget.height,
-        margin: widget.margin,
-        decoration: BoxDecoration(
-          color: widget.backgroundColor ?? Theme.of(context).primaryColor,
-          borderRadius: widget.borderRadius ?? BorderRadius.circular(8.r),
-          border: widget.border,
-          boxShadow: _isPressed
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: widget.borderRadius ?? BorderRadius.circular(8.r),
-            child: Padding(
-              padding: widget.padding ?? EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              child: Center(
-                child: _buildContent(),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildContent() {
-    if (widget.isLoading) {
-      return SizedBox(
-        width: 20.w,
-        height: 20.h,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(
-            widget.foregroundColor ?? Colors.white,
-          ),
-        ),
-      );
-    }
-    
-    if (widget.icon != null && widget.text != null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconTheme(
-            data: IconThemeData(
-              color: widget.foregroundColor ?? Colors.white,
-              size: 20.sp,
-            ),
-            child: widget.icon!,
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            widget.text!,
-            style: TextStyle(
-              color: widget.foregroundColor ?? Colors.white,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      );
-    } else if (widget.icon != null) {
-      return IconTheme(
-        data: IconThemeData(
-          color: widget.foregroundColor ?? Colors.white,
-          size: 20.sp,
-        ),
-        child: widget.icon!,
-      );
-    } else if (widget.text != null) {
-      return Text(
-        widget.text!,
-        style: TextStyle(
-          color: widget.foregroundColor ?? Colors.white,
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w600,
-        ),
-      );
-    }
-    
-    return const SizedBox.shrink();
-  }
-}
-''');
-  }
-  
-  print('📄 Created: lib/core/widgets/$snakeCase/${snakeCase}_widget.dart');
-}
-
-void _configureDependencies() {
-  print('\n📦 Configuring dependencies...');
-  
-  // Read pubspec.yaml
-  final pubspecFile = File('pubspec.yaml');
-  if (!pubspecFile.existsSync()) {
-    print('❌ pubspec.yaml not found!');
-    return;
-  }
-  
-  String content = pubspecFile.readAsStringSync();
-  
-  // Parse pubspec.yaml
-  final yamlMap = yaml.loadYaml(content) as Map;
-  
-  // Get current dependencies
-  final dependencies = (yamlMap['dependencies'] as Map?)?.cast<String, dynamic>() ?? {};
-  final devDependencies = (yamlMap['dev_dependencies'] as Map?)?.cast<String, dynamic>() ?? {};
-  
-  print('\n📦 Current dependencies:');
-  dependencies.forEach((key, value) {
-    print('  $key: $value');
-  });
-  
-  print('\n🛠️ Available dependency groups:');
-  print('1. Core (bloc, equatable, get_it, go_router, etc.)');
-  print('2. Network (dio, connectivity_plus, etc.)');
-  print('3. Storage (shared_preferences, flutter_secure_storage, etc.)');
-  print('4. UI (flutter_screenutil, lottie, etc.)');
-  print('5. Analytics (firebase_analytics, etc.)');
-  print('6. All of the above');
-  
-  stdout.write('\nEnter your choice (1-6): ');
-  final choice = stdin.readLineSync();
-  
-  Map<String, String> newDependencies = {};
-  Map<String, String> newDevDependencies = {};
-  
-  switch (choice) {
-    case '1':
-      newDependencies = {
-        'flutter_bloc': '^8.1.3',
-        'equatable': '^2.0.5',
-        'get_it': '^7.6.4',
-        'go_router': '^10.1.2',
-        'dartz': '^0.10.1',
-        'formz': '^0.6.1',
-        'internet_connection_checker': '^1.0.0+1',
-      };
-      break;
-    case '2':
-      newDependencies = {
-        'dio': '^5.3.2',
-        'connectivity_plus': '^4.0.2',
-        'retrofit': '^4.0.3',
-        'json_annotation': '^4.8.1',
-      };
-      newDevDependencies = {
-        'json_serializable': '^6.7.1',
-        'retrofit_generator': '^7.0.8',
-        'build_runner': '^2.4.6',
-      };
-      break;
-    case '3':
-      newDependencies = {
-        'shared_preferences': '^2.2.1',
-        'flutter_secure_storage': '^9.0.0',
-        'hive': '^2.2.3',
-        'hive_flutter': '^1.1.0',
-        'path_provider': '^2.1.1',
-      };
-      newDevDependencies = {
-        'hive_generator': '^2.0.1',
-      };
-      break;
-    case '4':
-      newDependencies = {
-        'flutter_screenutil': '^5.9.0',
-        'lottie': '^2.6.0',
-        'flutter_svg': '^2.0.7',
-        'cached_network_image': '^3.3.0',
-        'shimmer': '^3.0.0',
-      };
-      break;
-    case '5':
-      newDependencies = {
-        'firebase_core': '^2.24.0',
-        'firebase_analytics': '^10.7.0',
-        'firebase_crashlytics': '^3.4.4',
-        'firebase_performance': '^0.9.3+4',
-      };
-      break;
-    case '6':
-      newDependencies = {
-        'flutter_bloc': '^8.1.3',
-        'equatable': '^2.0.5',
-        'get_it': '^7.6.4',
-        'go_router': '^10.1.2',
-        'dartz': '^0.10.1',
-        'formz': '^0.6.1',
-        'internet_connection_checker': '^1.0.0+1',
-        'dio': '^5.3.2',
-        'connectivity_plus': '^4.0.2',
-        'retrofit': '^4.0.3',
-        'json_annotation': '^4.8.1',
-        'shared_preferences': '^2.2.1',
-        'flutter_secure_storage': '^9.0.0',
-        'hive': '^2.2.3',
-        'hive_flutter': '^1.1.0',
-        'path_provider': '^2.1.1',
-        'flutter_screenutil': '^5.9.0',
-        'lottie': '^2.6.0',
-        'flutter_svg': '^2.0.7',
-        'cached_network_image': '^3.3.0',
-        'shimmer': '^3.0.0',
-        'firebase_core': '^2.24.0',
-        'firebase_analytics': '^10.7.0',
-        'firebase_crashlytics': '^3.4.4',
-        'firebase_performance': '^0.9.3+4',
-      };
-      newDevDependencies = {
-        'json_serializable': '^6.7.1',
-        'retrofit_generator': '^7.0.8',
-        'build_runner': '^2.4.6',
-        'hive_generator': '^2.0.1',
-      };
-      break;
-    default:
-      print('❌ Invalid choice. Please try again.');
-      return;
-  }
-  
-  // Add new dependencies
-  newDependencies.forEach((key, value) {
-    if (!dependencies.containsKey(key)) {
-      dependencies[key] = value;
-      print('✅ Added dependency: $key: $value');
-    } else {
-      print('⚠️ Dependency already exists: $key');
-    }
-  });
-  
-  newDevDependencies.forEach((key, value) {
-    if (!devDependencies.containsKey(key)) {
-      devDependencies[key] = value;
-      print('✅ Added dev dependency: $key: $value');
-    } else {
-      print('⚠️ Dev dependency already exists: $key');
-    }
-  });
-  
-  // Update pubspec.yaml
-  final updatedYamlMap = Map<String, dynamic>.from(yamlMap);
-  updatedYamlMap['dependencies'] = dependencies;
-  updatedYamlMap['dev_dependencies'] = devDependencies;
-  
-  // Convert back to YAML string
-  // Use yaml_writer package to serialize the updatedYamlMap to YAML string
-  // Add dependency: yaml_writer: ^1.0.0 to your pubspec.yaml if not already present
-
-  final yamlWriter = YamlWriter();
-  final yamlString = yamlWriter.write(updatedYamlMap);
-
-  // Write to file
-  pubspecFile.writeAsStringSync(yamlString);
-  
-  print('\n✅ Dependencies configured successfully!');
-  print('\n📝 Run "flutter pub get" to install the new dependencies.');
 }
 
 void _createProjectReadme(String projectName, bool enableLocalization, bool enableTheming, bool enableAnalytics, bool enableAuth) {
